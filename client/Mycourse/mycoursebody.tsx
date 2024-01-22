@@ -24,7 +24,7 @@ const Mycoursebody = () => {
     useEffect(() => {
         const fetchCourses = async () => {
           try {
-            const response = await fetch('http://localhost:3001/node/api/core/getcourses');
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/node/api/core/getcourses`);
             const data = await response.json();
             setCourses(data); // Assuming data is an array of course details
           } catch (error) {
