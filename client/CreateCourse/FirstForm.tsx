@@ -48,47 +48,45 @@ const FirstForm = () => {
   
   const router = useRouter();
  
-
   const handleSubmit = async (e: { preventDefault: () => void; }) => {
     e.preventDefault();
-
-      
-      console.log(courseDetails);
-      let responseData;
-      let course= courseDetails;
-      let formData = new FormData();
-      formData.append('product',image || '');
-
-
-      const response = await axios.post('http://localhost:3001/node/api/core/uploadimage', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        Accept: 'application/json',
-      },
-    });
-
-    responseData = response.data;
-
-      if(responseData.success){
-        course.courseImage= responseData.image_url;
-        // console.log(course)
-        
-      const resp =  await axios.post('http://localhost:3001/node/api/core/addcourse', JSON.stringify(course), {
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-        });
-
-     
-        router.push('/courseadded');
-
-      }
-      
+  
+    
 
   
+      // Create FormData and append other form fields
+      let formData = new FormData();
+      formData.append('courseTitle', courseDetails.courseTitle);
+      formData.append('shortDescrp', courseDetails.shortDescrp);
+      formData.append('longDescrp', courseDetails.longDescrp);
+      formData.append('courseCategory', courseDetails.courseCategory);
+      formData.append('courseLevel', courseDetails.courseLevel);
+      formData.append('courseLanguage', courseDetails.courseLanguage);
+      formData.append('price', courseDetails.price);
+      formData.append('period', courseDetails.period);
+      formData.append('lectures', courseDetails.lectures);
 
+  
+      // Append the file to FormData
+      formData.append('courseImage', image || '');
+  
+      // Make a POST request using axios
+      const response = await axios.post('http://localhost:3001/node/api/core/createcoursewithimage', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Accept: 'application/json',
+        },
+      });
+  
+      const responseData = response.data;
+  
+      if (responseData.success) {
+        console.log(courseDetails);
+        router.push('/courseadded');
+      } 
+    
   };
+  
 
   return (
 

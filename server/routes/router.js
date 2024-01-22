@@ -25,18 +25,18 @@ const router = express.Router();
 router.use('/images', express.static('server/uploads'));
 
 
-
 router.get('/health-check', checkConnection);
 router.post('/login', userController.login);
 router.post('/signup', userController.signup);
 
 
 
-router.post('/uploadimage', upload.single('product'), courseControllers.createImage);
-router.post('/addcourse', courseControllers.createCourseFields);
+router.post('/createcoursewithimage', upload.single('courseImage'), courseControllers.createCourseWithImage);
 router.get('/getcourses', courseControllers.getCourses);
 router.delete('/deletecourse/:id', courseControllers.deleteCourse);
 
 
+
 /* Exporting the router object. */
 export default router;
+
