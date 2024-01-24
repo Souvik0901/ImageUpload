@@ -5,11 +5,13 @@ import axios from 'axios';
 import galary from '../assets/images/element/gallery.svg';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { SERVICE_URL } from '../../../utils/endpoint';
+import Cookies from 'js-cookie';
 
 
 const FirstForm = () => {
 
-  
+  const user = Cookies.get('token');
   const [image, setImage] = useState<File| null>(null);
 
   const imageHandler = (e: ChangeEvent<HTMLInputElement>) => {
@@ -71,10 +73,12 @@ const FirstForm = () => {
       formData.append('courseImage', image || '');
   
       // Make a POST request using axios
-      const response = await axios.post('http://localhost:3001/node/api/core/createcoursewithimage', formData, {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_BASE_URL}/node/api/core/createcoursewithimage`, formData, 
+      {
         headers: {
           'Content-Type': 'multipart/form-data',
           Accept: 'application/json',
+          Authorization: user 
         },
       });
   

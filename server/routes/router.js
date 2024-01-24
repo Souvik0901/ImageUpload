@@ -18,24 +18,29 @@ const fileStorageEngine = multer.diskStorage({
 });
 
 const upload = multer({ storage: fileStorageEngine });
+import getUserControllers from '../controllers/getUserControllers';
+import authenticateUser from '../middleware/authenticateUser';
 
 /* Creating a new router object. */
 const router = express.Router();
 
 router.use('/images', express.static('server/uploads'));
 
-
 router.get('/health-check', checkConnection);
 router.post('/login', userController.login);
 router.post('/signup', userController.signup);
+router.post('/logout', userController.logout);
+router.get('/getuserdata', authenticateUser.verifytoken, getUserControllers.getUser);
 
-
-
-router.post('/createcoursewithimage', upload.single('courseImage'), courseControllers.createCourseWithImage);
-router.get('/getcourses', courseControllers.getCourses);
+router.post(
+  '/createcoursewithimage', 
+  authenticateUser.verifytoken, 
+  upload.single('courseImage'),
+  courseControllers.createCourseWithImage,
+);
+router.get('/getcourses',authenticateUser.verifytoken, courseControllers.getCourses);
 router.delete('/deletecourse/:id', courseControllers.deleteCourse);
-
-
+router.patch('/updatecourse/:id', upload.single('courseImage'), courseControllers.updateCourse);
 
 /* Exporting the router object. */
 export default router;
