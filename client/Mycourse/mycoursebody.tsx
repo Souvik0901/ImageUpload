@@ -4,7 +4,9 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { RiArrowDropLeftLine, RiArrowDropRightLine } from "react-icons/ri";
 import { FaEdit,FaTimes } from "react-icons/fa";
-
+import axios from 'axios';
+import Cookies from 'js-cookie';
+import { SERVICE_URL } from '@/utils/endpoint';
 
 interface course {
     id:string;
@@ -18,24 +20,33 @@ interface course {
 
 
 const Mycoursebody = () => {
-
+    const user = Cookies.get('token');
     const [courses, setCourses] = useState<course[]>([]);
+    
 
-    useEffect(() => {
+
+
+      useEffect(() => {
         const fetchCourses = async () => {
           try {
-            const response = await fetch('http://localhost:3001/node/api/core/getcourses');
-            const data = await response.json();
-            setCourses(data); // Assuming data is an array of course details
+            const response = await axios.get(`${SERVICE_URL}getcourses`, {
+              headers: { Authorization: user },
+            });
+    
+            // Assuming the data structure matches the Course interface
+            const data: course[] = response.data;
+    
+            setCourses(data);
           } catch (error) {
             console.error('Error fetching courses:', error);
           }
         };
     
         fetchCourses();
-      }, []); // Empty dependency array ensures the effect runs only once on mount
+      }, [user]);
+
     
- 
+
 
 
 
@@ -133,7 +144,7 @@ const Mycoursebody = () => {
                                                     <div className="d-flex align-items-center">
                                           
                                                         <div className="w-100px">
-                                                            <Image src={course.courseImage} width={100} height={100} className="rounded" alt="nonenone"/>
+                                                            <Image src={`${process.env.NEXT_PUBLIC_BASE_URL}${course.courseImage}`} width={100} height={100} className="rounded" alt="nonenone"/>
                                                         </div>
                                                         <div className="mb-0 ms-2">
                                              
@@ -155,8 +166,8 @@ const Mycoursebody = () => {
                                                 <td>${course.price}</td>
                                       
                                                 <td className="d-flex align-items-center mt-3">
-                                                    <a href="#" className="btn btn-sm btn-success-soft btn-round me-1 mb-0"><FaEdit/></a>
-                                                    <button className="btn btn-sm btn-danger-soft btn-round mb-0" ><FaTimes/></button>
+                                                    <a href="#" className="btn btn-sm btn-success-soft btn-round me-1 mb-0" ><FaEdit/></a>
+                                                    <button className="btn btn-sm btn-danger-soft btn-round mb-0"><FaTimes/></button>
                                                 </td>
                                             </tr>
                                         ))}
