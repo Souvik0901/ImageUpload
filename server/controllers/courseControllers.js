@@ -1,12 +1,7 @@
 const mongoose = require('mongoose');
 const Courses = require('../models/courses');
 
-
-
-
 const createCourseWithImage = async (req, res) => {
- 
-
   try {
     if (req.file) {
       const imageUrl = `/node/api/core/images/${req.file.filename}`;
@@ -44,18 +39,80 @@ const createCourseWithImage = async (req, res) => {
 const getCourses = async (req, res) => {
 
   const { userId } = req.user;
+
   const search = req.query.search || "";
   const query = {
     courseTitle: { $regex: search, $options: "i" }
   }
   const courses = await Courses.find({ user_id: userId , ...query}).sort({ createdAt: -1 });
+
   if (!courses) {
     return res.status(401).json({ message: 'Customer does not exists' });
   }
   res.status(200).json(courses);
 };
 
+
+
+
+
+// get all courses through pagination
+const paginatedCourses = async (req, res) => {
+  const { userId } = req.user;
+  
+  const search = req.query.search || "";
+  const query = {
+    courseTitle: { $regex: search, $options: "i" }
+  }
+
+  try {
+    const courses = await Courses.find({ user_id: userId , ...query}).sort({ createdAt: -1 })
+
+    const page = parseInt(req.query.page)
+    const limit = parseInt(req.query.limit)
+
+    const startIndex = (page-1)*limit
+    const lastIndex =(page)*limit
+
+    const results ={}
+    results.totalcourse = courses.length;
+    results.pageCount = Math.ceil(courses.length/limit);
+
+
+    if(lastIndex <courses.length){
+        results.next ={
+          page: page+1
+        }
+    }
+
+    if(startIndex >0){
+      results.prev = {
+        page: page-1
+      }
+    }
+
+
+    results.result = courses.slice(startIndex, lastIndex)
+
+    if (!courses || courses.length === 0) {
+      return res.status(404).json({ message: 'No Courses Found' });
+    }
+
+    return res.status(200).json(results);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+
+
+
+
+
 // delete a single course
+
 const deleteCourse = async (req, res) => {
   const { id } = req.params;
 
@@ -70,6 +127,11 @@ const deleteCourse = async (req, res) => {
   }
   return res.status(200).json(course);
 };
+
+
+
+
+
 
 const updateCourse = async (req, res) => {
   try {
@@ -120,8 +182,10 @@ const updateCourse = async (req, res) => {
 
 module.exports = {
   getCourses,
+  paginatedCourses,
   deleteCourse,
   updateCourse,
   createCourseWithImage,
 };
+
 

@@ -1,1 +1,1 @@
-Search the courses based of the courseTitle.
+Pagination and Search Functionality added.

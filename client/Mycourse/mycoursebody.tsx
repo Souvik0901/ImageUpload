@@ -24,27 +24,33 @@ const Mycoursebody = () => {
     const [courses, setCourses] = useState<course[]>([]);
     
     const [search, setSearch] = useState<string>('');
-    // const [sort, setSort] = useState<string>(''); 
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const [pageCount, setPageCount] = useState<number>(1);
 
       useEffect(() => {
         const fetchCourses = async () => {
           try {
-            const response = await axios.get(`${SERVICE_URL}getcourses`, {
+            const response = await axios.get(`${SERVICE_URL}paginatedcourses`, {
               headers: { Authorization: user },
-              params: { search}, 
+              params: { search, page: currentPage, limit: 2}, 
             });
-            const data: course[] = response.data;
-    
+            const data: course[] = response.data.result;
             setCourses(data);
+            setPageCount(response.data.pageCount);
           } catch (error) {
             console.error('Error fetching courses:', error);
           }
         };
     
         fetchCourses();
-      }, [user, search]);
+      }, [user, search, currentPage]);
 
     
+
+
+      const handlePageChange = (newPage: number) => {
+        setCurrentPage(newPage);
+    };
 
 
 
@@ -144,7 +150,8 @@ const Mycoursebody = () => {
                                         
                                         
                                         <tbody>
-                                        {courses.map(course =>(
+                                        {
+                                          courses.map((course) =>(
                                             <tr key={course.id}>
                                      
                                                 <td>
@@ -183,6 +190,8 @@ const Mycoursebody = () => {
 
 
 
+                                    
+
 
                                         </tbody>
                                         
@@ -194,16 +203,30 @@ const Mycoursebody = () => {
 
 
                                 <div className="d-sm-flex justify-content-sm-between align-items-sm-center mt-4 mt-sm-3">
-                               
-                                    <p className="mb-0 text-center text-sm-start">Showing 1 to 8 of 20 entries</p>
-                     
+                                 <p className="mb-0 text-center text-sm-start">Showing 1 to {courses.length} of {courses.length} entries</p>
                                     <nav className="d-flex justify-content-center mb-0" aria-label="navigation">
                                         <ul className="pagination pagination-sm pagination-primary-soft mb-0 pb-0">
-                                            <li className="page-item mb-0"><a className="page-link" href="#" ><RiArrowDropLeftLine className='text-[19px]'/></a></li>
-                                            <li className="page-item mb-0"><a className="page-link" href="#">1</a></li>
-                                            <li className="page-item mb-0 active"><a className="page-link" href="#">2</a></li>
-                                            <li className="page-item mb-0"><a className="page-link" href="#">3</a></li>
-                                            <li className="page-item mb-0"><a className="page-link" href="#"><RiArrowDropRightLine className='text-[19px]'/></a></li>
+                                            {currentPage > 1 && (
+                                                <li className="page-item mb-0">
+                                                    <a className="page-link" href="#" onClick={() => handlePageChange(currentPage - 1)}>
+                                                        <RiArrowDropLeftLine className="text-[19px]" />
+                                                    </a>
+                                                </li>
+                                            )}
+                                            {[...Array(pageCount)].map((_, index) => (
+                                                <li className={`page-item mb-0 ${currentPage === index + 1 ? 'active' : ''}`} key={index}>
+                                                    <a className="page-link" href="#" onClick={() => handlePageChange(index + 1)}>
+                                                        {index + 1}
+                                                    </a>
+                                                </li>
+                                            ))}
+                                            {currentPage < pageCount && (
+                                                <li className="page-item mb-0">
+                                                    <a className="page-link" href="#" onClick={() => handlePageChange(currentPage + 1)}>
+                                                        <RiArrowDropRightLine className="text-[19px]" />
+                                                    </a>
+                                                </li>
+                                            )}
                                         </ul>
                                     </nav>
                                 </div>
