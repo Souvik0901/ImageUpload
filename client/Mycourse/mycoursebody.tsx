@@ -23,17 +23,16 @@ const Mycoursebody = () => {
     const user = Cookies.get('token');
     const [courses, setCourses] = useState<course[]>([]);
     
-
-
+    const [search, setSearch] = useState<string>('');
+    // const [sort, setSort] = useState<string>(''); 
 
       useEffect(() => {
         const fetchCourses = async () => {
           try {
             const response = await axios.get(`${SERVICE_URL}getcourses`, {
               headers: { Authorization: user },
+              params: { search}, 
             });
-    
-            // Assuming the data structure matches the Course interface
             const data: course[] = response.data;
     
             setCourses(data);
@@ -43,11 +42,9 @@ const Mycoursebody = () => {
         };
     
         fetchCourses();
-      }, [user]);
+      }, [user, search]);
 
     
-
-
 
 
 
@@ -102,7 +99,14 @@ const Mycoursebody = () => {
                                     
                                     <div className="col-md-8">
                                         <form className="rounded position-relative">
-                                            <input className="form-control pe-5 bg-transparent" type="search" placeholder="Search" aria-label="Search"/>
+                                            <input 
+                                            className="form-control pe-5 bg-transparent" 
+                                            type="search" 
+                                            placeholder="Search" 
+                                            aria-label="Search"
+                                            value={search}
+                                            onChange={(e)=>setSearch(e.target.value)}
+                                            />
                                             <button className="btn bg-transparent px-2 py-0 position-absolute top-50 end-0 translate-middle-y" type="submit"><i className="fas fa-search fs-6 "></i></button>
                                         </form>
                                     </div>
@@ -111,7 +115,10 @@ const Mycoursebody = () => {
                                     <div className="col-md-3">
                                      
                                         <form>
-                                            <select className="form-select js-choice border-0 z-index-9 bg-transparent" aria-label=".form-select-sm">
+                                            <select 
+                                            className="form-select js-choice border-0 z-index-9 bg-transparent"
+                                             aria-label=".form-select-sm"
+                                             >
                                                 <option value="">Sort by</option>
                                                 <option>Free</option>
                                                 <option>Newest</option>
@@ -175,8 +182,6 @@ const Mycoursebody = () => {
                                        
 
 
-
-                                    
 
 
                                         </tbody>
