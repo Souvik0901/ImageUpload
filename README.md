@@ -1,1 +1,1 @@
-Search the courses based of the courseTitle.
+Search the courses based on the courseTitle.
