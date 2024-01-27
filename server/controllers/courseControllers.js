@@ -44,7 +44,11 @@ const createCourseWithImage = async (req, res) => {
 const getCourses = async (req, res) => {
 
   const { userId } = req.user;
-  const courses = await Courses.find({ user_id: userId }).sort({ createdAt: -1 });
+  const search = req.query.search || "";
+  const query = {
+    courseTitle: { $regex: search, $options: "i" }
+  }
+  const courses = await Courses.find({ user_id: userId , ...query}).sort({ createdAt: -1 });
   if (!courses) {
     return res.status(401).json({ message: 'Customer does not exists' });
   }
