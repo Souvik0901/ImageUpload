@@ -7,6 +7,8 @@ import { FaEdit,FaTimes } from "react-icons/fa";
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { SERVICE_URL } from '@/utils/endpoint';
+import { axiosInstance } from '@/redux/interceptors';
+
 
 interface course {
     id:string;
@@ -14,51 +16,57 @@ interface course {
     courseTitle: string;
     lectures: number;
     price: number;
-    // Add other properties as needed
   }
 
 
 
 const Mycoursebody = () => {
+
     const user = Cookies.get('token');
     const [courses, setCourses] = useState<course[]>([]);
     
     const [search, setSearch] = useState<string>('');
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [pageCount, setPageCount] = useState<number>(1);
+    const [selectedSort, setSelectedSort] = useState<string>("");
+ 
 
-      useEffect(() => {
-        const fetchCourses = async () => {
-          try {
-            const response = await axios.get(`${SERVICE_URL}paginatedcourses`, {
-              headers: { Authorization: user },
-              params: { search, page: currentPage, limit: 2}, 
-            });
-            const data: course[] = response.data.result;
-            setCourses(data);
-            setPageCount(response.data.pageCount);
-          } catch (error) {
-            console.error('Error fetching courses:', error);
-          }
-        };
-    
-        fetchCourses();
-      }, [user, search, currentPage]);
+    useEffect(() => {
+    const fetchCourses = async () => {
 
-    
+        try {
+        const response = await axiosInstance.get(`${SERVICE_URL}paginatedcourses`, {
 
+            params: { search, page: currentPage, limit: 5, sort: selectedSort}, 
+        });
 
-      const handlePageChange = (newPage: number) => {
-        setCurrentPage(newPage);
+        const data: course[] = response.data.result;
+        setCourses(data);
+        setPageCount(response.data.pageCount);
+        } catch (error) {
+        console.error('Error fetching courses:', error);
+        }
     };
 
+    fetchCourses();
+    }, [user, search, currentPage, selectedSort]);
+
+    
 
 
-  return (
+    const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    };
+
+    
+
+   return (
     <div className='MycourseBody'>
         <section className="pt-0">
 	        <div className="container">
                 <div className="row">
+
+                    {/* Sidebar */}
                     <div className="col-xl-3">
                   
                         <nav className="navbar navbar-light navbar-expand-xl mx-0">
@@ -90,6 +98,7 @@ const Mycoursebody = () => {
                         
                     </div>
                
+                    {/* rightSidebar the main content */}
                     <div className="col-xl-9">
                     
                         <div className="card border rounded-3">
@@ -101,6 +110,8 @@ const Mycoursebody = () => {
                             <div className="card-body">
 
                            
+
+                                {/* Search & Sort Section */}
                                 <div className="row g-3 align-items-center justify-content-between mb-4">
                                     
                                     <div className="col-md-8">
@@ -124,10 +135,12 @@ const Mycoursebody = () => {
                                             <select 
                                             className="form-select js-choice border-0 z-index-9 bg-transparent"
                                              aria-label=".form-select-sm"
+                                             value={selectedSort}
+                                             onChange={(e) => setSelectedSort(e.target.value)}
                                              >
                                                 <option value="">Sort by</option>
                                                 <option>Free</option>
-                                                <option>Newest</option>
+                                                <option value="Newest">Newest</option>
                                                 <option>Most popular</option>
                                                 <option>Most Viewed</option>
                                             </select>
@@ -135,6 +148,9 @@ const Mycoursebody = () => {
                                     </div>
                                 </div>
                          
+
+
+                                {/* table portion */}
                                 <div className="table-responsive-lg border-0">
                                     <table className="table table-dark-gray align-middle p-4 mb-0 table-hover">
                              
@@ -151,7 +167,7 @@ const Mycoursebody = () => {
                                         
                                         <tbody>
                                         {
-                                          courses.map((course) =>(
+                                          courses && courses.map((course) =>(
                                             <tr key={course.id}>
                                      
                                                 <td>
@@ -181,7 +197,7 @@ const Mycoursebody = () => {
                                       
                                                 <td className="d-flex align-items-center mt-3">
                                                     <a href="#" className="btn btn-sm btn-success-soft btn-round me-1 mb-0" ><FaEdit/></a>
-                                                    <button className="btn btn-sm btn-danger-soft btn-round mb-0"><FaTimes/></button>
+                                                    <button className="btn btn-sm btn-danger-soft btn-round mb-0" ><FaTimes/></button>
                                                 </td>
                                             </tr>
                                         ))}
@@ -201,28 +217,28 @@ const Mycoursebody = () => {
 
 
 
-
+                                {/* pagination */}
                                 <div className="d-sm-flex justify-content-sm-between align-items-sm-center mt-4 mt-sm-3">
-                                 <p className="mb-0 text-center text-sm-start">Showing 1 to {courses.length} of {courses.length} entries</p>
+                                 <p className="mb-0 text-center text-sm-start">Showing Page {currentPage}  of {pageCount}</p>
                                     <nav className="d-flex justify-content-center mb-0" aria-label="navigation">
                                         <ul className="pagination pagination-sm pagination-primary-soft mb-0 pb-0">
                                             {currentPage > 1 && (
                                                 <li className="page-item mb-0">
-                                                    <a className="page-link" href="#" onClick={() => handlePageChange(currentPage - 1)}>
+                                                    <a className="page-link"  onClick={() => handlePageChange(currentPage - 1)}>
                                                         <RiArrowDropLeftLine className="text-[19px]" />
                                                     </a>
                                                 </li>
                                             )}
                                             {[...Array(pageCount)].map((_, index) => (
                                                 <li className={`page-item mb-0 ${currentPage === index + 1 ? 'active' : ''}`} key={index}>
-                                                    <a className="page-link" href="#" onClick={() => handlePageChange(index + 1)}>
+                                                    <a className="page-link" onClick={() => handlePageChange(index + 1)}>
                                                         {index + 1}
                                                     </a>
                                                 </li>
                                             ))}
                                             {currentPage < pageCount && (
                                                 <li className="page-item mb-0">
-                                                    <a className="page-link" href="#" onClick={() => handlePageChange(currentPage + 1)}>
+                                                    <a className="page-link" onClick={() => handlePageChange(currentPage + 1)}>
                                                         <RiArrowDropRightLine className="text-[19px]" />
                                                     </a>
                                                 </li>
