@@ -1,8 +1,11 @@
 const mongoose = require('mongoose');
+const ResponseObjectClass = require('../helpers/ResponseObject');
+
 const Courses = require('../models/courses');
 
+const newResponseObject = new ResponseObjectClass();
 
-//create a single course
+// create a  single course
 const createCourseWithImage = async (req, res) => {
   try {
     if (req.file) {
@@ -25,21 +28,34 @@ const createCourseWithImage = async (req, res) => {
       });
 
       await course.save();
-      res
-        .status(200)
-        .json({ code: 200, success: 1, message: 'Course creation successful', course });
-    } else {
-      res.status(200).json({ code: 401, success: 0, message: 'Image upload failed' });
+
+      return res.send(
+        newResponseObject.create({
+          code: 200,
+          success: true,
+          message: 'Course creation successful',
+          data: course,
+        }),
+      );
     }
+    return res.send(
+      newResponseObject.create({
+        code: 200,
+        success: false,
+        message: 'Image Upload Failed',
+        data: {},
+      }),
+    );
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ code: 500, success: 0, message: 'Internal server error' });
+    return res.send(
+      newResponseObject.create({
+        code: 500,
+        success: false,
+        message: 'internal server error',
+      }),
+    );
   }
 };
-
-
-
-
 
 // get all courses
 const getCourses = async (req, res) => {
@@ -49,17 +65,39 @@ const getCourses = async (req, res) => {
   const query = {
     courseTitle: { $regex: search, $options: 'i' },
   };
-  const courses = await Courses.find({ user_id: userId, ...query }).sort({ createdAt: 1 });
 
-  if (!courses) {
-    return res.status(200).json({ code: 401, codemessage: 'Customer does not exists' });
+  try {
+    const courses = await Courses.find({ user_id: userId, ...query }).sort({ createdAt: 1 });
+
+    if (!courses || courses.length === 0) {
+      return res.send(
+        newResponseObject.create({
+          code: 200,
+          success: false,
+          message: 'No Courses Found',
+          data: {},
+        }),
+      );
+    }
+
+    return res.send(
+      newResponseObject.create({
+        code: 200,
+        success: true,
+        message: 'Showing Course Successfully',
+        data: courses,
+      }),
+    );
+  } catch (error) {
+    return res.send(
+      newResponseObject.create({
+        code: 500,
+        success: false,
+        message: 'internal server error',
+      }),
+    );
   }
-  return res.status(200).json({ code: 200, courses });
 };
-
-
-
-
 
 // get all paginated courses
 const paginatedCourses = async (req, res) => {
@@ -102,53 +140,107 @@ const paginatedCourses = async (req, res) => {
     results.result = courses.slice(startIndex, lastIndex);
 
     if (!courses || courses.length === 0) {
-      return res.status(200).json({ code: 401, message: 'No Courses Found' });
+      return res.send(
+        newResponseObject.create({
+          code: 200,
+          success: false,
+          message: 'No Courses Found',
+          data: {},
+        }),
+      );
     }
 
-    return res.status(200).json({ code: 200, ...results });
+    return res.send(
+      newResponseObject.create({
+        code: 200,
+        success: true,
+        message: 'showing collections successfully',
+        ...results,
+      }),
+    );
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ code: 500, message: 'Internal server error' });
+    return res.send(
+      newResponseObject.create({
+        code: 500,
+        success: false,
+        message: 'internal server error',
+      }),
+    );
   }
 };
-
-
-
-
-
 
 // delete a single course
 const deleteCourse = async (req, res) => {
   const { id } = req.params;
+  const { userId } = req.user;
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(200).json({ code: 401, error: 'No such courseCollections' });
+  try {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.send(
+        newResponseObject.create({
+          code: 200,
+          success: false,
+          message: 'invalid courseid',
+        }),
+      );
+    }
+
+    const course = await Courses.findOneAndDelete({ user_id: userId, _id: id });
+
+    if (!course) {
+      return res.send(
+        newResponseObject.create({
+          code: 200,
+          success: false,
+          message: 'no such CourseCollection',
+        }),
+      );
+    }
+
+    return res.send(
+      newResponseObject.create({
+        code: 200,
+        success: true,
+        message: 'Delete Course Successfully',
+        data: course,
+      }),
+    );
+  } catch (error) {
+    return res.send(
+      newResponseObject.create({
+        code: 500,
+        success: false,
+        message: 'internal server error',
+      }),
+    );
   }
-
-  const course = await Courses.findOneAndDelete({ _id: id });
-
-  if (!course) {
-    return res.status(200).json({ code: 401, error: 'no such courseCollections' });
-  }
-  return res.status(200).json({ code: 200, course });
 };
 
-
-
-//Update a course
 const updateCourse = async (req, res) => {
   try {
     const courseId = req.params.id;
 
     if (!courseId) {
-      return res.status(200).json({ code: 401, success: 0, message: 'Invalid course ID' });
+      return res.send(
+        newResponseObject.create({
+          code: 200,
+          success: false,
+          message: 'Invalid course ID',
+        }),
+      );
     }
 
     // Find the existing course by ID
     const existingCourse = await Courses.findById(courseId);
 
     if (!existingCourse) {
-      return res.status(200).json({ code: 401, success: 0, message: 'Course not found' });
+      return res.send(
+        newResponseObject.create({
+          code: 200,
+          success: false,
+          message: 'Course Not Found',
+        }),
+      );
     }
 
     // Update the course fields based on the request body
@@ -172,19 +264,24 @@ const updateCourse = async (req, res) => {
     // Save the updated course
     await existingCourse.save();
 
-    res
-      .status(200)
-      .json({ code: 200, success: 1, message: 'Course update successful', course: existingCourse });
+    return res.send(
+      newResponseObject.create({
+        code: 200,
+        success: true,
+        message: 'Course Updated Successfully',
+        data: existingCourse,
+      }),
+    );
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ code: 500, success: 0, message: 'Internal server error' });
+    return res.send(
+      newResponseObject.create({
+        code: 500,
+        success: false,
+        message: 'internal server error',
+      }),
+    );
   }
-
-  return null;
 };
-
-
-
 
 module.exports = {
   getCourses,
