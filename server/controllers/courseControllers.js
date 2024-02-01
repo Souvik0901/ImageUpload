@@ -57,6 +57,15 @@ const createCourseWithImage = async (req, res) => {
   }
 };
 
+
+
+
+// get all courses
+const getCourse = async (req, res) => {
+  const courses = await Courses.find().sort({ createdAt: -1 });
+  res.status(200).json(courses);
+};
+
 // get all courses
 const getCourses = async (req, res) => {
   const { userId } = req.user;
@@ -217,10 +226,11 @@ const deleteCourse = async (req, res) => {
 };
 
 const updateCourse = async (req, res) => {
-  try {
-    const courseId = req.params.id;
+  const { id } = req.params;
+  const { userId } = req.user;
 
-    if (!courseId) {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.send(
         newResponseObject.create({
           code: 200,
@@ -231,7 +241,7 @@ const updateCourse = async (req, res) => {
     }
 
     // Find the existing course by ID
-    const existingCourse = await Courses.findById(courseId);
+    const existingCourse = await Courses.findById({ user_id: userId, _id: id });
 
     if (!existingCourse) {
       return res.send(
@@ -289,6 +299,7 @@ module.exports = {
   deleteCourse,
   updateCourse,
   createCourseWithImage,
+  getCourse
 };
 
 
