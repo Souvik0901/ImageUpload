@@ -48,6 +48,7 @@ router.post(
   upload.single('courseImage'),
   courseControllers.createCourseWithImage,
 );
+router.get('/getcourse', courseControllers.getCourse);
 router.get('/getcourses', authenticateUser.verifytoken, courseControllers.getCourses);
 router.get('/paginatedcourses', authenticateUser.verifytoken, courseControllers.paginatedCourses);
 router.delete('/deletecourse/:id', authenticateUser.verifytoken, courseControllers.deleteCourse);
