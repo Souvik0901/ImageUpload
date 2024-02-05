@@ -5,6 +5,9 @@ const Courses = require('../models/courses');
 
 const newResponseObject = new ResponseObjectClass();
 
+
+
+
 // create a  single course
 const createCourseWithImage = async (req, res) => {
   try {
@@ -62,21 +65,42 @@ const createCourseWithImage = async (req, res) => {
 
 // get all courses
 const getCourse = async (req, res) => {
-  const courses = await Courses.find().sort({ createdAt: -1 });
-  res.status(200).json(courses);
-};
-
-// get all courses
-const getCourses = async (req, res) => {
-  const { userId } = req.user;
 
   const search = req.query.search || '';
   const query = {
     courseTitle: { $regex: search, $options: 'i' },
   };
+  const sortoption = req.query.sort || '';
+
 
   try {
-    const courses = await Courses.find({ user_id: userId, ...query }).sort({ createdAt: 1 });
+    const courses = await Courses.find({...query }).sort({
+      purchaseDate: sortoption === 'Newest' ? -1 : 1,
+    });
+
+    const page = parseInt(req.query.page, 10);
+    const limit = parseInt(req.query.limit, 10);
+
+    const startIndex = (page - 1) * limit;
+    const lastIndex = page * limit;
+
+    const results = {};
+    results.totalcourse = courses.length;
+    results.pageCount = Math.ceil(courses.length / limit);
+
+    if (lastIndex < courses.length) {
+      results.next = {
+        page: page + 1,
+      };
+    }
+
+    if (startIndex > 0) {
+      results.prev = {
+        page: page - 1,
+      };
+    }
+
+    results.result = courses.slice(startIndex, lastIndex);
 
     if (!courses || courses.length === 0) {
       return res.send(
@@ -93,8 +117,8 @@ const getCourses = async (req, res) => {
       newResponseObject.create({
         code: 200,
         success: true,
-        message: 'Showing Course Successfully',
-        data: courses,
+        message: 'showing collections successfully',
+        ...results,
       }),
     );
   } catch (error) {
@@ -107,6 +131,14 @@ const getCourses = async (req, res) => {
     );
   }
 };
+
+
+
+
+
+
+
+
 
 // get all paginated courses
 const paginatedCourses = async (req, res) => {
@@ -178,6 +210,11 @@ const paginatedCourses = async (req, res) => {
   }
 };
 
+
+
+
+
+
 // delete a single course
 const deleteCourse = async (req, res) => {
   const { id } = req.params;
@@ -224,6 +261,15 @@ const deleteCourse = async (req, res) => {
     );
   }
 };
+
+
+
+
+
+
+
+
+
 
 const updateCourse = async (req, res) => {
   const { id } = req.params;
@@ -293,13 +339,16 @@ const updateCourse = async (req, res) => {
   }
 };
 
+
+
+
+
+
 module.exports = {
-  getCourses,
   paginatedCourses,
   deleteCourse,
   updateCourse,
   createCourseWithImage,
-  getCourse
+  getCourse, 
 };
-
 
