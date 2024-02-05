@@ -63,12 +63,17 @@ const createCourseWithImage = async (req, res) => {
 
 
 
+
 // get all courses
 const getCourse = async (req, res) => {
 
   const search = req.query.search || '';
+  const courseLevel = req.query.courseLevel || '';
+  const courseLanguage = req.query.courseLanguage|| '';
   const query = {
     courseTitle: { $regex: search, $options: 'i' },
+    courseLevel: { $regex: courseLevel, $options: 'i' }, 
+    courseLanguage: { $regex: courseLanguage, $options: 'i' },
   };
   const sortoption = req.query.sort || '';
 
