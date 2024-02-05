@@ -1,10 +1,10 @@
 "use client"
 import React, { useEffect, useState } from 'react';
-
+import Link from 'next/link';
 import Image from 'next/image';
 import { RiArrowDropLeftLine, RiArrowDropRightLine } from "react-icons/ri";
 import { FaEdit,FaTimes } from "react-icons/fa";
-import axios from 'axios';
+
 import Cookies from 'js-cookie';
 import { SERVICE_URL } from '@/utils/endpoint';
 import { axiosInstance } from '@/redux/interceptors';
@@ -16,6 +16,8 @@ interface course {
     courseTitle: string;
     lectures: number;
     price: number;
+    user_id: string,
+    _id: string
   }
 
 
@@ -31,17 +33,21 @@ const Mycoursebody = () => {
     const [selectedSort, setSelectedSort] = useState<string>("");
  
 
+
+    
     useEffect(() => {
     const fetchCourses = async () => {
 
         try {
         const response = await axiosInstance.get(`${SERVICE_URL}paginatedcourses`, {
-
             params: { search, page: currentPage, limit: 5, sort: selectedSort}, 
         });
 
         const data: course[] = response.data.result;
         setCourses(data);
+        console.log(data);
+
+
         setPageCount(response.data.pageCount);
         } catch (error) {
         console.error('Error fetching courses:', error);
@@ -59,6 +65,12 @@ const Mycoursebody = () => {
     };
 
     
+        
+
+
+
+
+
 
    return (
     <div className='MycourseBody'>
@@ -169,7 +181,6 @@ const Mycoursebody = () => {
                                         {
                                           courses && courses.map((course) =>(
                                             <tr key={course.id}>
-                                     
                                                 <td>
                                                     <div className="d-flex align-items-center">
                                           
@@ -196,7 +207,12 @@ const Mycoursebody = () => {
                                                 <td>${course.price}</td>
                                       
                                                 <td className="d-flex align-items-center mt-3">
-                                                    <a href="#" className="btn btn-sm btn-success-soft btn-round me-1 mb-0" ><FaEdit/></a>
+                                                    <Link className="btn btn-sm btn-success-soft btn-round me-1 mb-0"  
+                                                         href={`/editcourse?courseId=${course._id}`} passHref={true} replace={false} scroll={true}>
+                                                         
+                                                            <FaEdit/>
+                                                        
+                                                    </Link>    
                                                     <button className="btn btn-sm btn-danger-soft btn-round mb-0" ><FaTimes/></button>
                                                 </td>
                                             </tr>

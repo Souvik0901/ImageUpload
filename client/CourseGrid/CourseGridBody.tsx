@@ -1,13 +1,14 @@
 "use client"
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
-import course08 from  "../../components/assets/images/courses/4by3/08.jpg";
 import { RiArrowDropLeftLine, RiArrowDropRightLine } from "react-icons/ri";
 import { FiClock } from "react-icons/fi";
+import { FcLike } from "react-icons/fc";
+import { IoMdStar,IoMdStarHalf } from "react-icons/io";
 import { AiOutlineSchedule } from "react-icons/ai";
-import axios from 'axios';
-
-
+import { FaSearch } from "react-icons/fa";
+import { axiosInstance } from '@/redux/interceptors';
+import { SERVICE_URL } from '@/utils/endpoint';
 
 
 interface course {
@@ -26,21 +27,35 @@ const CourseGridBody = () => {
 
   const [courses, setCourses] = useState<course[]>([]);
 
+  const [search, setSearch] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageCount, setPageCount] = useState<number>(1);
+
+
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/node/api/core/getcourse`);
-        const data = await response.json();
-        setCourses(data); 
+        const response = await axiosInstance.get(`${SERVICE_URL}getcourse`,{
+          params: { search, page: currentPage, limit: 6, }, 
+        });
+        const data: course[] = response.data.result;
+        setCourses(data);
+        setPageCount(response.data.pageCount);
       } catch (error) {
         console.error('Error fetching courses:', error);
       }
     };
 
     fetchCourses();
-  }, []); 
+  }, [search, currentPage]); 
 
 
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    };
+
+
+    
   return (
     <div>
 
@@ -57,8 +72,14 @@ const CourseGridBody = () => {
               <div className="col-xl-6">
                 <form className="bg-body shadow rounded p-2">
                   <div className="input-group input-borderless">
-                    <input className="form-control me-1" type="search" placeholder="Find your course"/>
-                    <button type="button" className="btn btn-primary mb-0 rounded z-index-1"><i className="fas fa-search"></i></button>
+                    <input 
+                    className="form-control me-1" 
+                    type="search"
+                    placeholder="Find your course"
+                    value={search}
+                    onChange={(e)=>setSearch(e.target.value)}
+                    />
+                    <button type="button" className="btn btn-primary mb-0 rounded z-index-1" ><FaSearch/></button>
                   </div>
                 </form>
               </div>
@@ -82,7 +103,7 @@ const CourseGridBody = () => {
                   <i className="fas fa-sliders-h me-1"></i> Show filter
                 </button>
 
-                <p className="mb-0 text-end">Showing 1-7 of 32 result</p>
+                <p className="mb-0 text-end">Showing  page {currentPage} of {pageCount}</p>
               </div>
 
             </div>
@@ -90,7 +111,7 @@ const CourseGridBody = () => {
             
             <div className="row g-4">
 
-            { courses.map(course => (
+            {courses && courses.map(course => (
               <div className="col-sm-6 col-xl-4" key={course.id} >
                 <div className="card shadow h-100">
 
@@ -100,27 +121,28 @@ const CourseGridBody = () => {
 
                     <div className="d-flex justify-content-between mb-2">
                       <a href="#" className="badge bg-purple bg-opacity-10 text-purple">{course.courseLevel}</a>
-                      <a href="#" className="h6 fw-light mb-0"><i className="far fa-heart"></i></a>
+                      <a href="#" className="h6 fw-light mb-0"><i className="far fa-heart"><FcLike /></i></a>
                     </div>
 
                     <h5 className="card-title"><a href="#">{course.courseTitle}</a></h5>
                     <p className="mb-2 text-truncate-2">Proposal indulged no do sociable he throwing settling.</p>
 
                     <ul className="list-inline mb-0">
-                      <li className="list-inline-item me-0 small"><i className="fas fa-star text-warning"></i></li>
-                      <li className="list-inline-item me-0 small"><i className="fas fa-star text-warning"></i></li>
-                      <li className="list-inline-item me-0 small"><i className="fas fa-star text-warning"></i></li>
-                      <li className="list-inline-item me-0 small"><i className="fas fa-star text-warning"></i></li>
-                      <li className="list-inline-item me-0 small"><i className="far fa-star text-warning"></i></li>
-                      <li className="list-inline-item ms-2 h6 fw-light mb-0">4.0/5.0</li>
+                      <li className="list-inline-item me-0 small"><IoMdStar/></li>
+                      <li className="list-inline-item me-0 small"><IoMdStar/></li>
+                      <li className="list-inline-item me-0 small"><IoMdStar/></li>
+                      <li className="list-inline-item me-0 small"><IoMdStar/></li>
+                      <li className="list-inline-item me-0 small"><IoMdStarHalf /></li>
+                      <li className="list-inline-item ms-2 h6 fw-light mb-0"> 4.5/5.0</li>
                     </ul>
                   </div>
 
                   <div className="card-footer pt-0 pb-3">
                     <hr/>
-                    <div className="d-flex justify-content-between">
-                      <span className="h6 fw-light mb-0"><i><FiClock /></i>12h 56m</span>
-                      <span className="h6 fw-light mb-0"><i><AiOutlineSchedule /></i>{course.lectures} lectures</span>
+                    <div className="lower-cont">
+                      <span className="clock"><FiClock/>10h 00m</span>
+                      <span className="lect"><AiOutlineSchedule />{course.lectures} lectures</span>
+                      {/* <span className="h6 fw-light mb-0"><i><AiOutlineSchedule /></i>{course.lectures} lectures</span> */}
                     </div>
                   </div>
                 </div>
@@ -134,12 +156,30 @@ const CourseGridBody = () => {
             <div className="col-12">
               <nav className="mt-4 d-flex justify-content-center" aria-label="navigation">
                 <ul className="pagination pagination-primary-soft rounded mb-0">
-                  <li className="page-item mb-0"><a className="page-link" href="#" tabIndex={-1}><RiArrowDropLeftLine className='text-[25px]'/></a></li>
-                  <li className="page-item mb-0"><a className="page-link" href="#">1</a></li>
-                  <li className="page-item mb-0 active"><a className="page-link" href="#">2</a></li>
-                  <li className="page-item mb-0"><a className="page-link" href="#">..</a></li>
-                  <li className="page-item mb-0"><a className="page-link" href="#">6</a></li>
-                  <li className="page-item mb-0"><a className="page-link" href="#"><RiArrowDropRightLine className='text-[25px]'/></a></li>
+                  {currentPage > 1 && (
+                     <li className="page-item mb-0">
+                      <a className="page-link" href='#' onClick={() => handlePageChange(currentPage - 1)}>
+                        <RiArrowDropLeftLine className='text-[25px]'/>
+                      </a>
+                    </li>
+                  )}
+                 
+                 {[...Array(pageCount)].map((_, index) => (
+                    <li className={`page-item mb-0 ${currentPage === index + 1 ? 'active' : ''}`} key={index}>
+                        <a className="page-link" href='#' onClick={() => handlePageChange(index + 1)}>
+                            {index + 1}
+                        </a>
+                    </li>
+                  ))}
+
+                  {currentPage < pageCount && (
+                      <li className="page-item mb-0">
+                        <a className="page-link"  href='#' onClick={() => handlePageChange(currentPage + 1)}>
+                          <RiArrowDropRightLine className='text-[25px]'/>
+                        </a>
+                      </li>
+                  )}
+
                 </ul>
               </nav>
             </div>
