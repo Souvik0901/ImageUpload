@@ -18,6 +18,7 @@ interface course {
   lectures: number;
   price: number;
   courseLevel: string;
+  courseLanguage: string;
 }
 
 
@@ -31,7 +32,7 @@ const CourseGridBody = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageCount, setPageCount] = useState<number>(1);
   const [selectedskills, setSelectedskills] = useState<string[]>([]);
-
+  const [selectedlanguages, setSelectedlanguages] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -39,6 +40,7 @@ const CourseGridBody = () => {
         const response = await axiosInstance.get(`${SERVICE_URL}getcourse`,{
           params: { 
             courseLevel: selectedskills.join(','), 
+            courseLanguage: selectedlanguages.join(','), 
             page: currentPage, 
             limit: 6, 
           }, 
@@ -52,7 +54,7 @@ const CourseGridBody = () => {
     };
 
     fetchCourses();
-  }, [search, currentPage, selectedskills]); 
+  }, [search, currentPage, selectedskills, selectedlanguages]); 
 
 
   const handlePageChange = (newPage: number) => {
@@ -69,7 +71,14 @@ const CourseGridBody = () => {
       );
     };
     
-
+    const handleLanguageChange = (language: string) => {
+      // Toggle the selected skill level
+      setSelectedlanguages((prevLangs) =>
+        prevLangs.includes(language)
+          ? prevLangs.filter((lang) => lang !== language)
+          : [...prevLangs, language]
+      );
+    };
 
   return (
     <div>
@@ -365,41 +374,18 @@ const CourseGridBody = () => {
                         <h4 className="mb-3">Language</h4>
                         <ul className="list-inline mb-0 g-3">
                       
-                          <li className="list-inline-item mb-2">
-                            <input type="checkbox" className="btn-check" id="btn-check-2"/>
-                            <label className="btn btn-light btn-primary-soft-check" htmlFor="btn-check-2">English</label>
+                        {['English', 'Francas', 'Hindi','Russian','Bengali','Spanish','Portuguese'].map((level) => (
+                          <li className="list-inline-item mb-2"  key={level}>
+                            <input type="checkbox" className="btn-check"
+                             id={`btn-check-${level}`}
+                             checked={selectedlanguages.includes(level)}
+                             onChange={() => handleLanguageChange(level)}
+                             />
+                            <label className="btn btn-light btn-primary-soft-check" htmlFor={`btn-check-${level}`}>{level}</label>
                           </li>
-                        
-                          <li className="list-inline-item mb-2">
-                            <input type="checkbox" className="btn-check" id="btn-check-3"/>
-                            <label className="btn btn-light btn-primary-soft-check" htmlFor="btn-check-3">Francas</label>
-                          </li>
-                   
-                          <li className="list-inline-item mb-2">
-                            <input type="checkbox" className="btn-check" id="btn-check-4"/>
-                            <label className="btn btn-light btn-primary-soft-check" htmlFor="btn-check-4">Hindi</label>
-                          </li>
-                  
-                          <li className="list-inline-item mb-2">
-                            <input type="checkbox" className="btn-check" id="btn-check-5"/>
-                            <label className="btn btn-light btn-primary-soft-check" htmlFor="btn-check-5">Russian</label>
-                          </li>
-                     
-                          <li className="list-inline-item mb-2">
-                            <input type="checkbox" className="btn-check" id="btn-check-6"/>
-                            <label className="btn btn-light btn-primary-soft-check" htmlFor="btn-check-6">Spanish</label>
-                          </li>
-                      
-                          <li className="list-inline-item mb-2">
-                            <input type="checkbox" className="btn-check" id="btn-check-7"/>
-                            <label className="btn btn-light btn-primary-soft-check" htmlFor="btn-check-7">Bengali</label>
-                          </li>
-                         
-                          <li className="list-inline-item mb-2">
-                            <input type="checkbox" className="btn-check" id="btn-check-8"/>
-                            <label className="btn btn-light btn-primary-soft-check" htmlFor="btn-check-8">Portuguese</label>
-                          </li>
-                        </ul>
+                        ))}
+
+                        </ul> 
                       </div>
                     
                   </form>
