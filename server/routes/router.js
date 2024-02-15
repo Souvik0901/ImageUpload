@@ -8,6 +8,8 @@ import userController from '../controllers/userControllers';
 import courseControllers from '../controllers/courseControllers';
 import getUserControllers from '../controllers/getUserControllers';
 import editProfile from '../controllers/editProfile';
+import deleteAccount from '../controllers/deleteAccount';
+import enrollmentList from '../controllers/enrollmentList';
 
 /* Importing the functions from middleware files. */
 import authenticateUser from '../middleware/authenticateUser';
@@ -34,7 +36,8 @@ router.post('/login', userController.login);
 router.post('/signup', userController.signup);
 router.post('/logout', userController.logout);
 router.get('/getuserdata', authenticateUser.verifytoken, getUserControllers.getUser);
-router.post('/changepassword', authenticateUser.verifytoken, editProfile.changePassword);
+router.get('/removeuser', authenticateUser.verifytoken, deleteAccount.removeUser);
+router.get('/getenrollmentlist', authenticateUser.verifytoken, enrollmentList.getStudentDetails);
 router.post(
   '/updateprofileinfo',
   authenticateUser.verifytoken,
@@ -42,14 +45,15 @@ router.post(
   editProfile.changeUserdata,
 );
 
+
 router.post(
   '/createcoursewithimage',
   authenticateUser.verifytoken,
   upload.single('courseImage'),
   courseControllers.createCourseWithImage,
 );
-router.get('/getcourse', courseControllers.getCourse);
 router.get('/getcourses', authenticateUser.verifytoken, courseControllers.getCourses);
+router.get('/getsinglecourse/:id', authenticateUser.verifytoken, courseControllers.getSingleCourse);
 router.get('/paginatedcourses', authenticateUser.verifytoken, courseControllers.paginatedCourses);
 router.delete('/deletecourse/:id', authenticateUser.verifytoken, courseControllers.deleteCourse);
 router.patch(
@@ -58,6 +62,7 @@ router.patch(
   upload.single('courseImage'),
   courseControllers.updateCourse,
 );
+
 
 /* Exporting the router object. */
 export default router;
