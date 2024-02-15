@@ -1,11 +1,7 @@
 const mongoose = require('mongoose');
-const ResponseObjectClass = require('../helpers/ResponseObject');
-
 const Courses = require('../models/courses');
-
+const ResponseObjectClass = require('../helpers/ResponseObject');
 const newResponseObject = new ResponseObjectClass();
-
-
 
 
 // create a  single course
@@ -60,26 +56,20 @@ const createCourseWithImage = async (req, res) => {
   }
 };
 
-
-
-
-
 // get all courses
-const getCourse = async (req, res) => {
-
+const getCourses = async (req, res) => {
   const search = req.query.search || '';
   const courseLevel = req.query.courseLevel || '';
-  const courseLanguage = req.query.courseLanguage|| '';
+  const courseLanguage = req.query.courseLanguage || '';
   const query = {
     courseTitle: { $regex: search, $options: 'i' },
-    courseLevel: { $regex: courseLevel, $options: 'i' }, 
+    courseLevel: { $regex: courseLevel, $options: 'i' },
     courseLanguage: { $regex: courseLanguage, $options: 'i' },
   };
   const sortoption = req.query.sort || '';
 
-
   try {
-    const courses = await Courses.find({...query }).sort({
+    const courses = await Courses.find({ ...query }).sort({
       purchaseDate: sortoption === 'Newest' ? -1 : 1,
     });
 
@@ -137,11 +127,52 @@ const getCourse = async (req, res) => {
   }
 };
 
+// get single course
+const getSingleCourse = async (req, res) => {
+  const { userId } = req.user;
+  const { id } = req.params;
+  try {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.send(
+        newResponseObject.create({
+          code: 200,
+          success: false,
+          message: 'No Courses Found',
+          data: {},
+        }),
+      );
+    }
 
+    const course = await Courses.findById({ user_id: userId, _id: id });
 
-
-
-
+    if (!course) {
+      return res.send(
+        newResponseObject.create({
+          code: 200,
+          success: false,
+          message: 'No Courses Found',
+          data: {},
+        }),
+      );
+    }
+    return res.send(
+      newResponseObject.create({
+        code: 200,
+        success: true,
+        message: 'showing course details',
+        data: course,
+      }),
+    );
+  } catch (error) {
+    return res.send(
+      newResponseObject.create({
+        code: 500,
+        success: false,
+        message: 'internal server error',
+      }),
+    );
+  }
+};
 
 
 
@@ -215,11 +246,6 @@ const paginatedCourses = async (req, res) => {
   }
 };
 
-
-
-
-
-
 // delete a single course
 const deleteCourse = async (req, res) => {
   const { id } = req.params;
@@ -267,15 +293,7 @@ const deleteCourse = async (req, res) => {
   }
 };
 
-
-
-
-
-
-
-
-
-
+// update a single  course
 const updateCourse = async (req, res) => {
   const { id } = req.params;
   const { userId } = req.user;
@@ -292,7 +310,7 @@ const updateCourse = async (req, res) => {
     }
 
     // Find the existing course by ID
-    const existingCourse = await Courses.findById({ user_id: userId, _id: id });
+    const existingCourse = await Courses.findByIdAndUpdate({ user_id: userId, _id: id });
 
     if (!existingCourse) {
       return res.send(
@@ -344,16 +362,13 @@ const updateCourse = async (req, res) => {
   }
 };
 
-
-
-
-
-
 module.exports = {
+  getSingleCourse,
   paginatedCourses,
   deleteCourse,
   updateCourse,
   createCourseWithImage,
-  getCourse, 
+  getCourses,
 };
+
 
