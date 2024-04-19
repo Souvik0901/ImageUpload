@@ -6,7 +6,8 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { SERVICE_URL } from '../../../utils/endpoint';
 import Cookies from 'js-cookie';
-import Popup from '../Createcourse/Popup';
+import AddLecturePopup from './AddLecturePopup';
+import QuaryPopup from './QuaryPopup';
 
 import "../assets/vendor/stepper/css/bs-stepper.min.css";
 import "../assets/vendor/quill/css/quill.snow.css";
@@ -30,6 +31,19 @@ const Createcoursebody = () => {
     setActiveStep(step);
   };
 
+
+  type AccordionState = {
+    collapseOne: boolean;
+    collapseTwo: boolean;
+    collapseThree: boolean;
+    collapseFour: boolean;
+    collapseFive: boolean;
+    collapseSix: boolean;
+    collapseSeven: boolean;
+    collapseEight: boolean;
+  };
+
+
   const [courseDetails, setCourseDetails] = useState({
     courseImage:'',
     courseTitle : '', 
@@ -47,6 +61,23 @@ const Createcoursebody = () => {
   });
 
   const [buttonPopup, setButtonPopup] = useState(false);
+  const [accordionOpen, setAccordionOpen] = useState<AccordionState>({
+    collapseOne: false,
+    collapseTwo: false,
+    collapseThree: false,
+    collapseFour: false,
+    collapseFive: false,
+		collapseSix: false,
+		collapseSeven: false,
+		collapseEight: false,
+  });
+
+  const toggleAccordion = (item: keyof AccordionState) => {
+    setAccordionOpen((prevState) => ({
+      ...prevState,
+      [item]: !prevState[item],
+    }));
+  };
 
   const router = useRouter(); 
 
@@ -95,8 +126,9 @@ const Createcoursebody = () => {
   
 
   return (
+     
     
-     <div className='createcourse'>
+     <div className='createcourse'>       
         <section className="py-0 bg-blue h-100px align-items-center d-flex h-200px rounded-0" style={{ background: "url(assets/images/pattern/04.png) no-repeat center center", backgroundSize: "cover" }}>
           <div className="container">
             <div className="row">
@@ -106,9 +138,11 @@ const Createcoursebody = () => {
               </div>
             </div>
           </div>
+         
+
         </section>
 
-
+        
         <section>
           <div className="container">
                 {/* headlines */}
@@ -211,10 +245,8 @@ const Createcoursebody = () => {
 
 
                          {/* card-body */}
-                        <div className="card-body">
-                        
-                          <div className="bs-stepper-content">
-                              
+                        <div className="card-body">          
+                          <div className="bs-stepper-content">            
                               {/* form portion */}
                             <form  onSubmit={handleSubmit}
                                 id="coursedetailsform">  
@@ -505,32 +537,35 @@ const Createcoursebody = () => {
 
                               {activeStep === 3 &&           
                                 <div>
-
-                                  <h4>Curriculum</h4>
-                            
+                                  <h4>Curriculum</h4> 
                                   <hr/> 
-                            
-                                  <div className="row">
-                                    
+                                  <div className="row">                 
                                     <div className="d-sm-flex justify-content-sm-between align-items-center mb-3">
                                       <h5 className="mb-2 mb-sm-0">Upload Lecture</h5>
-                                      <a href="#" className="btn btn-sm btn-primary-soft mb-0" data-bs-toggle="modal" data-bs-target="#addLecture" onClick={()=>setButtonPopup(true)}><i className="bi bi-plus-circle me-2"></i>Add Lecture</a>                       
+                                      <a href="#" className="btn btn-sm btn-primary-soft mb-0" data-bs-toggle="modal" data-bs-target="#addLecture" onClick={()=>setButtonPopup(true)}><i className="bi bi-plus-circle me-2"></i>Add Lecture</a>                          
                                     </div>
+                                      <AddLecturePopup trigger ={buttonPopup} setTrigger ={setButtonPopup}></AddLecturePopup>
+                                 
 
-                                    {/* Popup modal for add lecture */}
-                                    <Popup trigger ={buttonPopup} setTrigger ={setButtonPopup}>                          
-                                    </Popup>
-                                  
-                                    <div className="accordion accordion-icon accordion-bg-light" id="accordionExample2">
-                                  
+                                    <div className="accordion accordion-icon accordion-bg-light" id="accordionExample2">   
                                       <div className="accordion-item mb-3">
                                         <h6 className="accordion-header font-base" id="heading-1">
-                                          <button className="accordion-button fw-bold rounded d-inline-block collapsed d-block pe-5" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-1" aria-expanded="false" aria-controls="collapse-1">
+                                          <button 
+                                              className={`accordion-button fw-bold rounded d-sm-flex d-inline-block ${
+                                                  accordionOpen.collapseOne ? '' : 'collapsed'
+                                              }`}
+                                              type="button"
+                                              onClick={() => toggleAccordion('collapseOne')}
+                                              aria-expanded={accordionOpen.collapseOne}
+                                              aria-controls="collapse-1"
+                                          >
                                             Introduction of Digital Marketing 
                                           </button>
                                         </h6>
                             
-                                        <div id="collapse-1" className="accordion-collapse collapse show" aria-labelledby="heading-1" data-bs-parent="#accordionExample2">
+                                        <div id="collapse-1" className={`accordion-collapse collapse ${
+                                          accordionOpen.collapseOne ? 'show' : ''
+                                        }`} aria-labelledby="heading-1" data-bs-parent="#accordionExample2">
                                       
                                           <div className="accordion-body mt-3">
                                       
@@ -570,35 +605,28 @@ const Createcoursebody = () => {
                                         </div>
                                       </div>
                               
-                                      <div className="accordion-item mb-3">
-                                        <h6 className="accordion-header font-base" id="heading-2">
-                                          <button className="accordion-button fw-bold rounded d-inline-block collapsed d-block pe-5" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-2" aria-expanded="false" aria-controls="collapse-2">
-                                            Customer Life cycle
-                                          </button>
-                                        </h6>
-                            
-                                        <div id="collapse-2" className="accordion-collapse collapse" aria-labelledby="heading-2" data-bs-parent="#accordionExample2">
-                                          <div className="accordion-body mt-3">
-                                          
-                                            <a href="#" className="btn btn-sm btn-dark mb-0" data-bs-toggle="modal" data-bs-target="#addTopic">
-                                              <i className="bi bi-plus-circle me-2"></i>Add topic
-                                            </a>	
-                                          </div>
-                                        </div>
-                                      </div>
                             
                                       <div className="accordion-item mb-3">
                                         <h6 className="accordion-header font-base" id="heading-3">
-                                          <button className="accordion-button fw-bold collapsed rounded d-block pe-5" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-3" aria-expanded="false" aria-controls="collapse-3">
+                                          <button 
+                                            className={`accordion-button fw-bold rounded d-sm-flex d-inline-block ${
+                                              accordionOpen.collapseTwo ? '' : 'collapsed'
+                                            }`}
+                                            type="button"
+                                            onClick={() => toggleAccordion('collapseTwo')}
+                                            aria-expanded={accordionOpen.collapseTwo}
+                                            aria-controls="collapse-1"
+                                          >
                                             How much should I offer the sellers? 
                                           </button>
-                                        </h6>
-                                        
-                                        <div id="collapse-3" className="accordion-collapse collapse" aria-labelledby="heading-3" data-bs-parent="#accordionExample2">
-                                          <div className="accordion-body mt-3">
-                                            
+                                        </h6> 
+                                        <div id="collapse-3" 
+                                           className={`accordion-collapse collapse ${
+                                            accordionOpen.collapseTwo ? 'show' : ''
+                                            }`} aria-labelledby="heading-3" data-bs-parent="#accordionExample2">
+                                          <div className="accordion-body mt-3">    
                                             <a href="#" className="btn btn-sm btn-dark mb-0" data-bs-toggle="modal" data-bs-target="#addTopic">
-                                              <i className="bi bi-plus-circle me-2"></i>Add topic
+                                              <i className="bi bi-plus-circle me-2">Add topic</i>
                                             </a>
                                           </div>
                                         </div>
@@ -738,6 +766,8 @@ const Createcoursebody = () => {
 
 
      </div>
+
+
 
 
 
