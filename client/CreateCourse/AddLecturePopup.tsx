@@ -1,12 +1,8 @@
 import React from 'react';
 
-
-const Popup = (props) => {
+const AddLecturePopup = (props: { trigger: any; setTrigger: (arg0: boolean) => void; }) => {
   return (props.trigger)?(
-    <div className='popup'>
-      
-     
-
+    <div className='Popup'>
             <div className="modal-dialog">
                 <div className="modal-content">
                       <div className="modal-header bg-dark">
@@ -35,4 +31,4 @@ const Popup = (props) => {
   ):"";
 }
 
-export default Popup
+export default AddLecturePopup
