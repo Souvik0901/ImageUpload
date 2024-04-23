@@ -1,5 +1,5 @@
 "use client"
-import {ChangeEvent, useState } from 'react';
+import {ChangeEvent, useRef, useState } from 'react';
 import axios from 'axios';
 import galary from '../assets/images/element/gallery.svg';
 import Image from 'next/image';
@@ -7,12 +7,14 @@ import { useRouter } from 'next/navigation';
 import { SERVICE_URL } from '../../../utils/endpoint';
 import Cookies from 'js-cookie';
 import {FaPlay,FaEdit,FaTimes } from "react-icons/fa";
-import AddLecturePopup from './AddLecturePopup';
-import QuaryPopup from './QuaryPopup';
+// import LecturePopup from './LecturePopup';
+
+import {Dialog, DialogContent} from '@material-ui/core';
 
 import "../assets/vendor/stepper/css/bs-stepper.min.css";
 import "../assets/vendor/quill/css/quill.snow.css";
 import about04 from '../assets/images/about/04.jpg';
+import { axiosInstance } from '@/redux/interceptors';
 
 
 
@@ -32,6 +34,8 @@ const Createcoursebody = () => {
     setActiveStep(step);
   };
 
+  const [lectopicshow, setlecttopicshow] = useState<any>([]);
+  const [lectshow, setlectshow] = useState<any>([]);
 
   type AccordionState = {
     collapseOne: boolean;
@@ -44,7 +48,7 @@ const Createcoursebody = () => {
     collapseEight: boolean;
   };
 
-
+  const [curriculum, setCurriculum] = useState<any>([]);
   const [courseDetails, setCourseDetails] = useState({
     courseImage:'',
     courseTitle : '', 
@@ -62,6 +66,8 @@ const Createcoursebody = () => {
   });
 
   const [buttonPopup, setButtonPopup] = useState(false);
+  const [openPopup, setOpenPopup] = useState(false);
+
   const [accordionOpen, setAccordionOpen] = useState<AccordionState>({
     collapseOne: false,
     collapseTwo: false,
@@ -115,7 +121,7 @@ const Createcoursebody = () => {
       formData.append('courseImage', image || '');
   
       // Make a POST request using axios
-      const response = await axios.post(`${SERVICE_URL}createcoursewithimage`, formData, 
+      const response = await axiosInstance.post(`${SERVICE_URL}createcoursewithimage`, formData, 
       {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -130,6 +136,77 @@ const Createcoursebody = () => {
         router.push('/courseadded');
       }    
   };
+
+  const handleClose = () => {
+    setButtonPopup(false); 
+  };
+  const lectpopOpenClose = (idx:any)=>{
+    const indexToUpdate = idx;
+    const updatedLectopicshow = [...lectshow];
+    updatedLectopicshow[indexToUpdate].topicshow = !updatedLectopicshow[indexToUpdate].topicshow;
+    setlectshow(updatedLectopicshow);
+  }
+
+
+
+
+  const handleCloseQuery = (idx:any) => {
+      const indexToUpdate = idx;
+      const updatedLectopicshow = [...lectopicshow];
+      updatedLectopicshow[indexToUpdate].topicshow = false;
+      setlecttopicshow(updatedLectopicshow);
+  };
+
+  const handleOpenQuery = (idx:any) => {
+      const indexToUpdate = idx;
+      const updatedLectopicshow = [...lectopicshow];
+      updatedLectopicshow[indexToUpdate].topicshow = true;
+      setlecttopicshow(updatedLectopicshow);
+  };
+
+  const lecturename = useRef<HTMLInputElement>(null);
+  const savelecture = (lecture :any)=>{
+    if(lecture.current.value !== null && lecture.current.value !== ""){
+      const newLecture = {
+        lectureName: lecture.current.value,
+        topics: []
+      }
+      const newCurriculumData = [...curriculum, newLecture ]
+      setCurriculum(newCurriculumData)
+      setlecttopicshow([...lectopicshow,{topicshow:false}]); 
+      setlectshow([...lectshow,{topicshow:false}]); 
+      handleClose();   
+    }
+  }
+
+  const topicname = useRef<HTMLInputElement>(null);
+  const topicdesc = useRef<HTMLTextAreaElement>(null);
+  const topicvideo = useRef<HTMLInputElement>(null);
+
+  const saveTopic = async(tname:any,tdesc:any,tvideo:any,idx:any) =>{
+    // axiosInstance.post(`${SERVICE_URL}uploadvideo`,{VideoLink :tvideo.current.value})
+    // .then((response)=>{
+    //   console.log(response);
+    //   console.log(tname.current.value);
+    //   console.log(tdesc.current.value);
+    //   handleCloseQuery()
+    // })
+    // .catch((error)=>{
+    //   console.log(error);
+    // })
+    console.log(idx)
+    const updatedCurriculum = [...curriculum];
+    const firstLecture = updatedCurriculum[idx];
+    firstLecture.topics.push({
+      topicName:tname.current.value,
+      topicDescription: tdesc.current.value,
+      topicvideo:"link1",
+    });
+    setCurriculum(updatedCurriculum);
+    handleCloseQuery(idx);
+  }
+
+
   
 
   return (
@@ -549,100 +626,123 @@ const Createcoursebody = () => {
                                   <div className="row">                 
                                     <div className="d-sm-flex justify-content-sm-between align-items-center mb-3">
                                       <h5 className="mb-2 mb-sm-0">Upload Lecture</h5>
-                                      <a href="#" className="btn btn-sm btn-primary-soft mb-0" data-bs-toggle="modal" data-bs-target="#addLecture" onClick={()=>setButtonPopup(true)}><i className="bi bi-plus-circle me-2"></i>Add Lecture</a>                          
+                                      <a className="btn btn-sm btn-primary-soft mb-0" data-bs-toggle="modal" data-bs-target="#addLecture" onClick={()=>setButtonPopup(true)}><i className="bi bi-plus-circle me-2"></i>Add Lecture</a>                          
                                     </div>
                                      
                                  
-
+                             
                                     <div className="accordion accordion-icon accordion-bg-light" id="accordionExample2">   
-                                      <div className="accordion-item mb-3">
-                                        <h6 className="accordion-header font-base" id="heading-1">
-                                          <button 
-                                              className={`accordion-button fw-bold rounded d-sm-flex d-inline-block ${
-                                                  accordionOpen.collapseOne ? '' : 'collapsed'
-                                              }`}
-                                              type="button"
-                                              onClick={() => toggleAccordion('collapseOne')}
-                                              aria-expanded={accordionOpen.collapseOne}
-                                              aria-controls="collapse-1"
-                                          >
-                                            Introduction of Digital Marketing 
-                                          </button>
-                                        </h6>
-                            
-                                        <div id="collapse-1" className={`accordion-collapse collapse ${
-                                          accordionOpen.collapseOne ? 'show' : ''
-                                        }`} aria-labelledby="heading-1" data-bs-parent="#accordionExample2" style={{ visibility: 'visible' }}>
-                                      
-                                          <div className="accordion-body mt-3">
-                                      
-                                            <div className="d-flex justify-content-between align-items-center">
-                                              <div className="position-relative"  style={{ display: 'flex', alignItems: 'center' }}>
-                                                <a href="#" className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"><i className="fas fa-play"><FaPlay/></i></a>
-                                                <span className="ms-2 mb-0 h6 fw-light">Introduction</span>
-                                              </div>
-                                      
-                                              <div  style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <a href="#" className="btn btn-sm btn-success-soft btn-round me-1 mb-1 mb-md-0"><i className="far fa-fw fa-edit"><FaEdit/></i></a>
-                                                <button className="btn btn-sm btn-danger-soft btn-round mb-0"><i className="fas fa-fw fa-times"><FaTimes/></i></button>
-                                              </div>
-                                            </div>
-                                        
-                                            <hr/>
-                            
-                                            <div className="d-flex justify-content-between align-items-center" >
-                                              <div className="position-relative"  style={{ display: 'flex', alignItems: 'center' }}>
-                                                <a href="#" className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"><i className="fas fa-play"><FaPlay/></i></a>
-                                                <span className="ms-2 mb-0 h6 fw-light">What is Digital Marketing</span>
-                                              </div>
-                                            
-                                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <a href="#" className="btn btn-sm btn-success-soft btn-round me-1 mb-1 mb-md-0"><i className="far fa-fw fa-edit"><FaEdit/></i></a>
-                                                <button className="btn btn-sm btn-danger-soft btn-round mb-0"><i className="fas fa-fw fa-times"><FaTimes/></i></button>
-                                              </div>
-                                            </div>
-                                          
-                                            <hr/>
-                                        
-                            
-                                        
-                                            <a href="#" className="btn btn-sm btn-dark mb-0" data-bs-toggle="modal" data-bs-target="#addTopic"><i className="bi bi-plus-circle me-2"></i>Add topic</a>
-                                          </div>
-                                    
-                                        </div>
-                                      </div>
-                              
-                            
-                                      <div className="accordion-item mb-3">
-                                        <h6 className="accordion-header font-base" id="heading-3">
-                                          <button 
-                                            className={`accordion-button fw-bold rounded d-sm-flex d-inline-block ${
-                                              accordionOpen.collapseTwo ? '' : 'collapsed'
-                                          }`}
-                                          type="button"
-                                          onClick={() => toggleAccordion('collapseTwo')}
-                                          aria-expanded={accordionOpen.collapseTwo}
-                                          aria-controls="collapse-1"
-                                          >
-                                            How much should I offer the sellers? 
-                                          </button>
-                                        </h6> 
-                                        <div id="collapse-3" 
-                                           className={`accordion-collapse collapse ${
-                                            accordionOpen.collapseTwo ? 'show' : ''
-                                            }`} aria-labelledby="heading-3" data-bs-parent="#accordionExample2" style={{ visibility: 'visible' }}>
-        
                                      
-                                          <div className="accordion-body mt-3 ">    
-                                            <a href="#" className="btn btn-sm btn-dark mb-0" data-bs-toggle="modal" >
-                                              <i className="bi bi-plus-circle me-2">Add topic</i>
-                                            </a>
+                                    {
+                                      curriculum.map((value:any,cindex:any)=>{
+                                        return(
+                                          <div key={cindex}>
+
+
+                                            <Dialog open={lectopicshow[cindex].topicshow}>   
+                                                <DialogContent className= "bg-dark">
+                                                <div className="modal-dialog">
+                                                    <div className="modal-content">
+                                                      <div className="modal-header bg-dark">
+                                                        <h5 className="modal-title text-white" id="addTopicLabel">Add topic</h5>
+                                                        <button type="button" className="btn btn-sm btn-light mb-0" data-bs-dismiss="modal" aria-label="Close" onClick={()=>{handleCloseQuery(cindex)}}><i className="bi bi-x-lg"></i></button>
+                                                      </div>
+                                                      <div className="modal-body">
+                                                        <form className="row text-start g-3">
+                                                        
+                                                          <div className="col-md-6">
+                                                            <label className="form-label"style={{color:'white'}}>Topic name</label>
+                                                            <input className="form-control" type="text" placeholder="Enter topic name" ref={topicname}/>
+                                                          </div>
+                                                        
+                                                          <div className="col-md-6">
+                                                            <label className="form-label" style={{color:'white'}}>Video link</label>
+                                                            <input className="form-control" type="file" placeholder="upload video" ref={topicvideo}/>
+                                                          </div>
+                                                        
+                                                          <div className="col-12 mt-3">
+                                                            <label className="form-label" style={{color:'white'}}>Course description</label>
+                                                            <textarea className="form-control" rows={4} placeholder="" spellCheck="false" ref={topicdesc}></textarea>
+                                                          </div>
+                                                      
+                                                          <div className="col-6 mt-3">
+                                                            <div className="btn-group" role="group" aria-label="Basic radio toggle button group">
+                                                          
+                                                              <input type="radio" className="btn-check" name="options" id="option1" />
+                                                              <label className="btn btn-sm btn-light btn-primary-soft-check border-0 m-0" htmlFor="option1">Free</label>
+                                                          
+                                                              <input type="radio" className="btn-check" name="options" id="option2"/>
+                                                              <label className="btn btn-sm btn-light btn-primary-soft-check border-0 m-0" htmlFor="option2">Premium</label>
+                                                            </div>
+                                                          </div>
+                                                        </form>
+                                                      </div>
+                                                      <div className="modal-footer">
+                                                        <button  className="btn btn-danger-soft my-0" data-bs-dismiss="modal" onClick={()=>{handleCloseQuery(cindex)}}>Close</button>
+                                                        <a  className="btn btn-success my-0" onClick={()=>{saveTopic(topicname,topicdesc,topicvideo,cindex)}}>Save topic</a>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </DialogContent>
+                                              </Dialog>
+
+                                              <div className="accordion-item mb-3">
+                                          <h6 className="accordion-header font-base" id="heading-1">
+                                            <button 
+                                                className={`accordion-button fw-bold rounded d-sm-flex d-inline-block ${
+                                                    lectshow[cindex].topicshow ? '' : 'collapsed'
+                                                }`}
+                                                type="button"
+                                                onClick={() => lectpopOpenClose(cindex)}
+                                                aria-expanded={lectshow[cindex].topicshow}
+                                                aria-controls="collapse-1"
+                                            >
+                                              {value.lectureName}
+                                            </button>
+                                          </h6>
+                              
+                                          <div id="collapse-1" className={`accordion-collapse collapse ${
+                                            lectshow[cindex].topicshow ? 'show' : ''
+                                          }`} aria-labelledby="heading-1" data-bs-parent="#accordionExample2" style={{ visibility: 'visible' }}>
+                                        
+                                            <div className="accordion-body mt-3">
+                                             
+                                             {
+                                              value.topics.map((topicvalue:any,topicindex:any)=>{
+                                                return(
+                                                  <div key={topicindex}>
+                                                  <div className="d-flex justify-content-between align-items-center">
+                                                    <div className="position-relative"  style={{ display: 'flex', alignItems: 'center' }}>
+                                                      <a href="#" className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"><i className="fas fa-play"><FaPlay/></i></a>
+                                                      <span className="ms-2 mb-0 h6 fw-light">{topicvalue.topicName}</span>
+                                                    </div>
+                                            
+                                                    <div  style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                      <a href="#" className="btn btn-sm btn-success-soft btn-round me-1 mb-1 mb-md-0"><i className="far fa-fw fa-edit"><FaEdit/></i></a>
+                                                      <button className="btn btn-sm btn-danger-soft btn-round mb-0"><i className="fas fa-fw fa-times"><FaTimes/></i></button>
+                                                    </div>
+                                                  </div>
+                                                  <hr/>
+                                                  </div>
+                                                )
+                                              })
+                                             }
+                                              <a href="#" className="btn btn-sm btn-dark mb-0" data-bs-toggle="modal" data-bs-target="#addTopic" onClick={()=>{handleOpenQuery(cindex)}}><i className="bi bi-plus-circle me-2"></i>Add topic</a>
+                                            </div>
+                                      
                                           </div>
-                                      
-                                        </div>
-                                      </div>	
-                                      
-                            
+                                        </div>  
+                                          </div>
+
+                                         
+                                        )
+                                      })
+                                    }
+                                    
+                                                          
+                                    
+                                    
+                                    
                                     </div>
                                   
                             
@@ -777,8 +877,33 @@ const Createcoursebody = () => {
 
      </div>
      
-     <AddLecturePopup trigger ={buttonPopup} setTrigger ={setButtonPopup}></AddLecturePopup>
+     <Dialog open={buttonPopup} >   
+       <DialogContent className= "bg-dark">
+       <div className="modal-dialog">
+                <div className="modal-content">
+                      <div className="modal-header bg-dark">
+                        <h5 className="modal-title text-white" id="addLectureLabel">Add Lecture</h5>
+                        <button  className="btn btn-sm btn-light mb-0" data-bs-dismiss="modal" aria-label="Close" onClick={handleClose}><i className="bi bi-x-lg"></i></button>
+                      </div>
+                      <div className="modal-body">
+                        <form className="row text-start g-3">
+                          
+                          <div className="col-12">
+                            <label className="form-label" style={{color:'white'}}>Course name <span className="text-danger">*</span></label>
+                            <input type="text" className="form-control" placeholder="Enter lecture name" ref={lecturename}/>
+                          </div>
+                        </form>
+                      </div>
+                      <div className="modal-footer">
+                        <button type="button" className="btn btn-danger-soft my-0" data-bs-dismiss="modal" onClick={handleClose}>Close</button>
+                        <button type="button" className="btn btn-success my-0" onClick={()=>{savelecture(lecturename)}}>Save Lecture</button>
+                      </div>
+                </div>
+            </div>
+       </DialogContent>
+    </Dialog>
 
+   
 
 </>
 
