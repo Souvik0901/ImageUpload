@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { RiArrowDropLeftLine, RiArrowDropRightLine } from "react-icons/ri";
-import { FaPaperPlane, FaStar,  FaRegStar } from "react-icons/fa";
+import { FaPaperPlane, FaStar,  FaRegStar,  FaCheck } from "react-icons/fa";
 import Cookies from 'js-cookie';
 import { SERVICE_URL } from '@/utils/endpoint';
 import { axiosInstance } from '@/redux/interceptors';
@@ -15,10 +15,11 @@ import defaultImg from '../assets/images/avatar/defaultprofile.png';
 
 
 interface Review {
-  map(arg0: (item: any) => React.JSX.Element): unknown;
+  reply: string;
   id: string;
   review: string;
   ratings: string;
+
   courseId: {
     _id:string;
     courseImage: string;
@@ -38,7 +39,7 @@ interface Review {
 
 const ReviewBody = () => {
   const router = useRouter();
-  const [review, setReview] = useState<Review | null>(null);
+  const [review, setReview] = useState<Review[]>([]);
   const [replyDetails, setReplyDetails] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
@@ -87,6 +88,7 @@ const ReviewBody = () => {
       replyData.append('reviewId', reviewId);
       const res = await axiosInstance.post(`${SERVICE_URL}sendreply`, replyData);
       console.log(res);
+      window.location.reload();
     } catch (error) {
       console.error('Error posting reply:', error);
     }
@@ -177,62 +179,96 @@ const ReviewBody = () => {
                   </div>
                 </div>
               
+
+
                 <div className="card-body mt-2 mt-sm-4">
-         
-               {/* single content */}
-                <>
-              { review && review.map((item) => (
+                {/* single content */}
                   <>
-                 
-                  <div className="d-sm-flex" key={item._id}> 
-                 
-                      {item.student.profileImg ? (
-                          <Image src={item.student.profileImg} width={100} height={100} className="avatar avatar-lg rounded-circle float-start me-3" alt="student-image" />
-                          ) : (
-                          <Image src={defaultImg} width={100} height={100} className="avatar avatar-lg rounded-circle float-start me-3" alt="default-image" />
-                      )}          
-  
-                    <div>
-                      <div className="mb-3 d-sm-flex justify-content-sm-between align-items-center">         
-                        <div>
-                          <h5 className="m-0">{item.student.name}</h5>
-                          <span className="me-3 small">June 11, 2021 at 6:01 am </span>
-                        </div>          
-                        <div className="star-ratings" style={{ display: "flex", color: "yellow"}}>
-                           {renderStars(item.ratings)}
-                        </div>
-                      </div>        
-                      <h6><span className="text-body fw-light">Review on: </span>{item.courseId.courseTitle}</h6>
-                      <p>{item.review}</p>              
-                      <div className="text-end">
-                        <a href="#" className="btn btn-sm btn-primary-soft mb-1 mb-sm-0">Direct message</a>
-                        <a className="btn btn-sm btn-light mb-0" data-bs-toggle="collapse" href="#collapseComment" role="button" aria-expanded="false" aria-controls="collapseComment">
-                          Reply
-                        </a>       
-                        <div className="collapse show" id="collapseComment" style={{ visibility: "visible" }}>
-                          <div className="d-flex mt-3">
-                            <textarea className="form-control mb-0" placeholder="Add a comment..." rows={2} spellCheck= "false" 
-                                     name='reply'
-                                     value={replyDetails[item._id] || ''}
-                                     onChange={(e) => handleChange(e, item._id)}>
-                            </textarea>
-                            <button className="btn btn-sm btn-primary-soft ms-2 px-4 mb-0 flex-shrink-0"  onClick={()=>{postReply(item._id)}}><i className="fas fa-paper-plane fs-5"><FaPaperPlane/></i></button>
+                  {Array.isArray(review) && review.map((Review) => (
+                      <>
+                  
+                        <div className="d-sm-flex" key={Review._id}> 
+                      
+                            {Review.student.profileImg ? (
+                                <Image src={Review.student.profileImg} width={100} height={100} className="avatar avatar-lg rounded-circle float-start me-3" alt="student-image" />
+                                ) : (
+                                <Image src={defaultImg} width={100} height={100} className="avatar avatar-lg rounded-circle float-start me-3" alt="default-image" />
+                            )}          
+        
+                          <div>
+                            <div className="mb-3 d-sm-flex justify-content-sm-between align-items-center">         
+                              <div>
+                                <h5 className="m-0" style={{color: "palevioletred"}}>{Review.student.name}</h5>
+                                <span className="me-3 small">June 11, 2021 at 6:01 am </span>
+                              </div>          
+                              <div className="star-ratings" style={{ display: "flex", color: "yellow"}}>
+                                {renderStars(Review.ratings)}
+                              </div>
+                            </div>        
+                            <h6 style={{color: "burlywood"}}><span className="text-body fw-light" >Review on: </span>{Review.courseId.courseTitle}</h6>
+                            <p>{Review.review}</p>              
+                            <div className="text-end">
+                            
+
+                              
+                              {Review.reply === "" ? (
+                                  <div className="collapse show" id="collapseComment" style={{ visibility: "visible" }}>
+                                    <div className="d-flex mt-3">
+                                      <textarea 
+                                        className="form-control mb-0" 
+                                        placeholder="Add a comment..." 
+                                        rows={2}
+                                        spellCheck="false" 
+                                        name="reply"
+                                        value={replyDetails[Review._id] || ''}
+                                        onChange={(e) => handleChange(e, Review._id)}
+                                      ></textarea>
+                                      <button className="btn btn-sm btn-primary-soft ms-2 px-4 mb-0 flex-shrink-0" onClick={() => postReply(Review._id)}>
+                                        <i className="fas fa-paper-plane fs-5"><FaPaperPlane/></i>
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="collapse show" id="collapseComment" style={{ visibility: "visible" }}>
+                                    <div className="d-flex mt-3">
+                                      <textarea 
+                                        className="form-control mb-0" 
+                                        placeholder="Add a comment..." 
+                                        rows={2}
+                                        spellCheck="false" 
+                                        value={Review.reply}
+                                      ></textarea>
+                                        <div className="replied" style={{
+                                          width: "75px",
+                                          height: "70px",
+                                          backgroundColor: "#189c36fc", // Note: Background color should be enclosed in quotes
+                                          color: "#fff",
+                                          display: "flex",
+                                          justifyContent: "center",
+                                          alignItems: "center",
+                                          borderRadius: "50%"
+                                        }}>
+                                          <div className="fas fa-paper-plane fs-5"><FaCheck/></div>
+                                        </div>
+
+
+                                    </div>
+                                  </div>
+                                )}
+
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                  <hr/>
-                  </>
-                ))}
-               
-                </>
+                        <hr/>
+                      </>
+                  ))}
                 
-                            
+                  </>                
                 </div>
+
+
              
-                <div className="card-footer border-top">
-                  
+                <div className="card-footer border-top">   
                   <div className="d-sm-flex justify-content-sm-between align-items-sm-center">
                     <p className="mb-0 text-center text-sm-start">Showing 1 to 8 of 20 entries</p>
           
@@ -245,9 +281,10 @@ const ReviewBody = () => {
                         <li className="page-item my-0"><a className="page-link" href="#"><i className="fas fa-angle-right"></i></a></li>
                       </ul>
                     </nav>
-                  </div>
-                
+                  </div>     
                 </div>
+
+                
               </div>
               
             </div>
